@@ -67,6 +67,23 @@ def test_chart_tool_produces_figure(store, settings):
     assert any(a.kind == "chart" for a in r.artifacts)
 
 
+def test_auto_chart_fallback_when_user_asks_to_see(store, settings):
+    agent, _ = make_agent(store, settings, [
+        tool_call("run_sql", {"sql": "SELECT date_trunc('month', order_date) m, SUM(revenue) r FROM sales GROUP BY 1"}),
+        answer("Trend is flat."),
+    ])
+    r = agent.ask("Show monthly sales trends")
+    assert any(a.kind == "chart" for a in r.artifacts) and r.steps[-1].tool == "auto_chart"
+
+
+def test_no_auto_chart_for_plain_questions(store, settings):
+    agent, _ = make_agent(store, settings, [
+        tool_call("run_sql", {"sql": "SELECT region, SUM(revenue) r FROM sales GROUP BY 1"}),
+        answer("East."),
+    ])
+    assert not any(a.kind == "chart" for a in agent.ask("Which region is best?").artifacts)
+
+
 def test_max_steps_forces_final_answer(store, settings):
     steps = settings.max_tool_steps
     script = [tool_call("run_sql", {"sql": "SELECT 1"}, f"c{i}") for i in range(steps)] + [answer("final")]

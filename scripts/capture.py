@@ -40,12 +40,22 @@ def idle(page: Page, extra_ms: int = 800) -> None:
 
 
 def ask(page: Page, q: str) -> None:
+    before = page.get_by_test_id("stChatMessage").count()
     box = page.get_by_test_id("stChatInputTextArea")
     box.click()
     box.type(q, delay=25)
     box.press("Enter")
-    page.wait_for_timeout(1500)
-    idle(page, 1500)
+    # Wait for the answer to be committed (user + assistant messages added, no spinner).
+    page.wait_for_function(
+        "(n) => document.querySelectorAll('[data-testid=\"stChatMessage\"]').length >= n + 2"
+        " && !document.body.innerText.includes('Analysing')",
+        arg=before, timeout=180000,
+    )
+    idle(page, 2000)
+    # Scroll so the newest question sits at the top of the viewport.
+    msgs = page.get_by_test_id("stChatMessage")
+    msgs.nth(msgs.count() - 2).evaluate("el => el.scrollIntoView({block: 'start'})")
+    page.wait_for_timeout(1200)
 
 
 def main() -> None:
@@ -76,8 +86,8 @@ def main() -> None:
                 ask(page, q)
                 page.screenshot(path=str(shots / f"chat_{i}.png"), full_page=False)
                 if args.video:
-                    page.mouse.wheel(0, 600)
-                    page.wait_for_timeout(1200)
+                    page.mouse.wheel(0, 500)
+                    page.wait_for_timeout(1500)
 
         page.get_by_role("tab", name="📈 Dashboard").click()
         idle(page, 2500)

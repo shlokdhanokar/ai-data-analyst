@@ -48,6 +48,27 @@ def df_to_text(df: pd.DataFrame, max_rows: int = 30) -> str:
     return text
 
 
+def _impact(df: pd.DataFrame, report: Any) -> str:
+    """Pre-computed business impact per anomaly type, so the LLM never has to estimate it."""
+    measures = [c for c in df.select_dtypes("number").columns
+                if any(k in c.lower() for k in ("revenue", "sales", "amount", "total"))]
+    if not measures:
+        return ""
+    m = measures[0]
+    total = float(df[m].sum())
+    by_method: dict[str, set[int]] = {}
+    for a in report.anomalies:
+        if a.row_index is not None:
+            by_method.setdefault(a.method, set()).add(a.row_index)
+    if not by_method or not total:
+        return ""
+    lines = [f"\n\nImpact on {m} (computed; total {m} = {total:,.2f}):"]
+    for method, idx in by_method.items():
+        value = float(df.loc[sorted(idx), m].sum())
+        lines.append(f"- {method}: {len(idx)} row(s) with {m} {value:,.2f} ({value / total:.2%} of total)")
+    return "\n".join(lines)
+
+
 # --------------------------------------------------------------------------- specs
 
 TOOL_SPECS: list[dict[str, Any]] = [
@@ -235,8 +256,11 @@ class ToolExecutor:
         artifacts = [Artifact("anomalies", f"Anomalies in {table}", frame)] if not frame.empty else []
         # Include the flagged rows themselves so the model can describe them.
         rows = [a.row_index for a in sorted(report.anomalies, key=lambda a: -a.score) if a.row_index is not None][:8]
-        context = f"\n\nFlagged rows (top {len(rows)}):\n{df_to_text(df.loc[rows])}" if rows else ""
-        return ToolResult(content=report.summary() + context, artifacts=artifacts)
+        context = f"\n\nFlagged rows (top {len(rows)}):\n{df_to_text(df.loc[rows].rename_axis('row').reset_index())}" if rows else ""
+        types = sorted({a.method for a in report.anomalies})
+        instruction = (f"\n\nIn your answer, give one bullet per anomaly type found ({', '.join(types)}), each with "
+                       f"its strongest example (row values or date) and why it was flagged.") if types else ""
+        return ToolResult(content=report.summary() + _impact(df, report) + context + instruction, artifacts=artifacts)
 
     def data_quality_report(self, table: str) -> ToolResult:
         report = assess_quality(self.store.get(table), table=table)

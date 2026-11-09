@@ -1,0 +1,159 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "pass_rate": 1.0,
+  "passed": 9,
+  "total": 9,
+  "avg_latency_s": 4.45,
+  "total_tokens": 45367,
+  "run_at": "2026-11-09 13:40",
+  "results": [
+    {
+      "question": "Which region generated the highest revenue?",
+      "passed": true,
+      "facts_ok": true,
+      "tools_ok": true,
+      "artifact_ok": true,
+      "expected": [
+        "West"
+      ],
+      "tools_used": [
+        "run_sql"
+      ],
+      "latency_s": 3.22,
+      "tokens": 3675,
+      "error": null,
+      "answer": "**West region generated the highest revenue, with **$1,018,553**.**  \n\n### Key insights\n- West\u2019s revenue is about **6% higher** than the next\u2011best region (North).  \n- The top three regions (West, North, East) together account for **~78%** of total revenue, indicating a strong geographic concentration.  \n- Central and South together contribute less than **30%** of total revenue, suggesting potential growth opportunities there.\n\n### How I got this\n- Queried the **sales** table, summing the **revenue** column per **region** and ordering descending.  \n- No missing or anomalous revenue values were detected that would affect the ranking."
+    },
+    {
+      "question": "Show monthly sales trends.",
+      "passed": true,
+      "facts_ok": true,
+      "tools_ok": true,
+      "artifact_ok": true,
+      "expected": [],
+      "tools_used": [
+        "create_chart",
+        "run_sql"
+      ],
+      "latency_s": 4.31,
+      "tokens": 6831,
+      "error": null,
+      "answer": "**Monthly sales revenue ranged from **$73\u202fK** in Jan\u202f2024 to a peak of **$327\u202fK** in Sep\u202f2025**, with notable spikes in Apr\u202f2024, Jul\u202f2025 and Sep\u202f2025.\n\n### Key insights\n- **Strong growth in late\u20112025:** Sep\u202f2025 revenue (**$327\u202fK**) was **~2.5\u00d7** the Jan\u202f2024 baseline and **~25\u202f%** higher than the previous month.\n- **Seasonal dip:** Oct\u202f2025 saw the lowest 2025 month (**$103\u202fK**), a **~68\u202f% drop** from Sep\u202f2025, indicating possible seasonality or inventory issues.\n- **Consistent mid\u2011year performance:** Apr\u2011Jun each year consistently delivered **$150\u2011$320\u202fK**, suggesting stable demand in Q2.\n- **Overall upward trend:** Total revenue across the 24 months increased from **$73\u202fK** to **$327\u202fK**, a **~350\u202f%** rise, reflecting expanding sales volume or higher\u2011priced orders.\n\n### How I got this\n- Queried the **sales** table, aggregating **revenue** by month (`date_trunc('month', order_date)`) and summing.\n- Ordered the results chronologically and plotted them with a **line chart** to visualize the trend.\n- No data gaps were found for the period; revenue includes any negative values (returns) already accounted for."
+    },
+    {
+      "question": "Which products are underperforming?",
+      "passed": true,
+      "facts_ok": true,
+      "tools_ok": true,
+      "artifact_ok": true,
+      "expected": [
+        "Tablet 10|Webcam HD"
+      ],
+      "tools_used": [
+        "run_sql"
+      ],
+      "latency_s": 19.05,
+      "tokens": 13991,
+      "error": null,
+      "answer": "**Under\u2011performing products are those with revenue well below the portfolio average (\u202f**\u2248\u202f$389\u202fk**\u202f) and/or a negative year\u2011over\u2011year trend \u2013 namely\u202f**Webcam\u202fHD** and **Tablet\u202f10** (both down\u202f\u2248\u202f\u201128\u202f% and\u202f\u201155\u202f% respectively), plus the low\u2011revenue set\u202f**Wireless\u202fMouse, Bluetooth\u202fSpeaker, USB\u2011C\u202fHub, Mechanical\u202fKeyboard, Smartwatch\u202fS**.**  \n\n### Key insights\n- **Revenue concentration:** The top 3 products (Laptop\u202fPro\u202f14, 4K\u202fMonitor, Noise\u2011Cancel\u202fHeadphones) generate **\u2248\u202f78\u202f%** of total sales ($3.89\u202fM).  \n- **Below\u2011average performers:** 7 of 10 SKUs (70\u202f%) fall under the average $389\u202fk revenue mark, indicating a highly skewed product mix.  \n- **Negative growth:** Tablet\u202f10 lost **$90\u202fk** YoY (\u201154\u202f%) and Webcam\u202fHD lost **$9\u202fk** (\u201128\u202f%); all other products grew YoY.  \n- **Potential focus areas:** Reviving Tablet\u202f10 (perhaps pricing or promotion) and investigating why Webcam\u202fHD sales are shrinking (stock issues, competition) could lift overall profitability.\n\n### How I got this\n- Summed **revenue** per product (sales table) to compute total and average revenue.  \n- Compared each product\u2019s **2024 vs 2025 revenue** to calculate absolute and percent change.  \n- Identified products with **total revenue < average** and **negative percent change** as under\u2011performers.  \n- No data gaps were found, but note that **quantity** includes some negative values (returns) which are already reflected in the revenue figures."
+    },
+    {
+      "question": "What are the top five customers by revenue? Include their names.",
+      "passed": true,
+      "facts_ok": true,
+      "tools_ok": true,
+      "artifact_ok": true,
+      "expected": [
+        "C015|Core Labs",
+        "C006|Blue Digital",
+        "C046|Prime Digital"
+      ],
+      "tools_used": [
+        "run_sql"
+      ],
+      "latency_s": 1.94,
+      "tokens": 3943,
+      "error": null,
+      "answer": "**Top 5 customers by revenue:**  \n- **C015 \u2013 Core Labs:** **$764,869.50**  \n- **C006 \u2013 Blue Digital:** **$444,313.80**  \n- **C046 \u2013 Prime Digital:** **$291,416.35**  \n- **C080 \u2013 Zen Traders:** **$207,019.70**  \n- **C041 \u2013 Peak Industries:** **$171,487.22**\n\n### Key insights\n- Core Labs alone accounts for **~30%** of total revenue from the top five customers, indicating a high concentration risk.\n- The revenue gap between the #1 (Core Labs) and #2 (Blue Digital) is **$320,555.70**, showing a clear lead.\n- The top five together contribute **~1.9\u202fM** in revenue, a substantial share of overall sales.\n- Four of the top five customers belong to the **Enterprise** segment (based on typical naming), suggesting this segment drives most of the high\u2011value sales.\n\n### How I got this\n- Joined **sales** with **customers** on `customer_id`.\n- Aggregated `revenue` per customer and ordered descending.\n- Limited the result to the top five rows. No missing data issues were observed for these fields."
+    },
+    {
+      "question": "Generate SQL for this analysis.",
+      "passed": true,
+      "facts_ok": true,
+      "tools_ok": true,
+      "artifact_ok": true,
+      "expected": [
+        "select"
+      ],
+      "tools_used": [],
+      "latency_s": 1.63,
+      "tokens": 2130,
+      "error": null,
+      "answer": "```sql\nSELECT\n    s.customer_id,\n    c.customer_name,\n    SUM(s.revenue) AS total_revenue\nFROM sales AS s\nJOIN customers AS c\n    ON s.customer_id = c.customer_id\nGROUP BY\n    s.customer_id,\n    c.customer_name\nORDER BY\n    total_revenue DESC\nLIMIT 5;\n```"
+    },
+    {
+      "question": "Detect anomalies in the sales dataset.",
+      "passed": true,
+      "facts_ok": true,
+      "tools_ok": true,
+      "artifact_ok": true,
+      "expected": [
+        "2025-07-15"
+      ],
+      "tools_used": [
+        "detect_anomalies"
+      ],
+      "latency_s": 4.03,
+      "tokens": 5266,
+      "error": null,
+      "answer": "**Anomalies are present across six dimensions in the\u202fsales\u202ftable, the most extreme cases being a\u202f150\u2011unit Laptop order (outlier), a\u202f\u20115\u202fquantity return (rule), a duplicated Tablet record, a revenue spike of\u202f$197,383\u202fon\u202f2025\u201109\u201105 (timeseries), a\u202f$12.99\u202fprice for a Mechanical Keyboard (contextual) and a record\u2011count surge to\u202f67\u202frows on\u202f2025\u201107\u201115 (volume).**  \n\n### Key insights\n- **Outlier:**\u202forder\u202f`ORD-100884` (2025\u201108\u201127) sold **150\u202funits** of *Laptop Pro\u202f14* at $1,299 each \u2192 revenue **$194,850**, ~50\u00d7 the typical quantity (median\u202f=\u202f3).  \n- **Rule violation:**\u202forder\u202f`ORD-100177` (2025\u201105\u201110) shows **\u20115\u202funits** of *Wireless Mouse* \u2192 negative revenue **\u2011$145**, indicating a likely return or data entry error.  \n- **Duplicate:**\u202forder\u202f`ORD-103209` appears **twice** (2024\u201106\u201109) with identical fields, potentially double\u2011counting **$\u2011998** of revenue.  \n- **Timeseries spike:**\u202ftotal revenue on **2025\u201109\u201105** was **$197,383** versus a typical daily median of **$4,668** (\u2248\u202f80\u202f\u03c3 deviation), suggesting a reporting or aggregation issue.  \n- **Contextual error:**\u202forder\u202f`ORD-101132` (2024\u201108\u201127) lists *Mechanical Keyboard* at **$12.99** (99.8\u202f% of such rows are $89), likely a price\u2011entry mistake.  \n- **Volume surge:**\u202fon **2025\u201107\u201115** the dataset contains **67 records** (median\u202f\u2248\u202f7 per day), a 40\u2011\u03c3 jump that may reflect a bulk upload or duplicate import.\n\n### How I got this\n- Ran `detect_anomalies` on the **sales** table, which flagged 18 issues across outlier, rule, duplicate, timeseries, contextual, and volume categories.  \n- Extracted the most extreme example for each type from the tool\u2019s output (largest quantity, biggest negative quantity, highest\u2011revenue duplicate, biggest daily revenue spike, most deviant unit price, and largest daily record count).  \n- Summarized the reasons each case was flagged based on the algorithm\u2019s criteria (statistical deviation, rule violation, exact duplicate rows, time\u2011series median deviation, product\u2011price mismatch, and record\u2011volume deviation)."
+    },
+    {
+      "question": "Which customer segment brings the most revenue?",
+      "passed": true,
+      "facts_ok": true,
+      "tools_ok": true,
+      "artifact_ok": true,
+      "expected": [
+        "Consumer"
+      ],
+      "tools_used": [
+        "run_sql"
+      ],
+      "latency_s": 2.39,
+      "tokens": 3732,
+      "error": null,
+      "answer": "**Consumer segment generates the highest revenue at **$2,058,626**, far above SMB ($940,253) and Enterprise ($893,640).**\n\n### Key insights\n- Consumer accounts contribute **\u2248 55\u202f%** of total revenue, more than double the next segment.\n- SMB and Enterprise together account for the remaining 45\u202f% and are roughly equal in performance.\n- The strong Consumer lead suggests marketing and product focus should prioritize this segment to sustain growth.\n\n### How I got this\n- Joined **sales** with **customers** on `customer_id`.\n- Summed `revenue` per `segment` and ordered descending.\n- No missing or anomalous revenue values were detected that would affect the totals."
+    },
+    {
+      "question": "Forecast revenue for the next 3 months.",
+      "passed": true,
+      "facts_ok": true,
+      "tools_ok": true,
+      "artifact_ok": true,
+      "expected": [],
+      "tools_used": [
+        "forecast"
+      ],
+      "latency_s": 2.67,
+      "tokens": 4021,
+      "error": null,
+      "answer": "**Revenue is forecast to be\u202f**$180,950** in Jan\u202f2026,\u202f**$179,188** in Feb\u202f2026, and\u202f**$194,568** in Mar\u202f2026 (80\u202f% confidence intervals\u202f\u2248\u202f$87\u202fk\u2011$274\u202fk, $86\u202fk\u2011$273\u202fk, $101\u202fk\u2011$288\u202fk respectively).**\n\n### Key insights\n- **Growth trend:** Forecasted revenue rises modestly from the last observed month (Dec\u202f2025\u202f\u2248\u202f$119\u202fk) to a peak in Mar\u202f2026, indicating a positive upward trend.\n- **Seasonality:** The model predicts a slight dip in Feb\u202f2026 before rebounding, suggesting a mild seasonal pattern in the data.\n- **Uncertainty:** Wide confidence intervals (\u2248\u202f$180\u202fk range) reflect variability in past monthly revenue, so actual results could deviate substantially.\n- **Actionable focus:** Monitor Feb\u202f2026 closely; if revenue falls below the lower bound, investigate potential causes (e.g., channel disruptions or product issues).\n\n### How I got this\n- Used the **`forecast`** tool on the **`sales`** table, aggregating **`revenue`** by **`order_date`** at a monthly frequency and projecting the next **3** months.\n- The model applied a linear trend with monthly seasonality (OLS) and generated 80\u202f% prediction intervals. No additional assumptions were needed beyond the existing revenue column."
+    },
+    {
+      "question": "What is the weather in London today?",
+      "passed": true,
+      "facts_ok": true,
+      "tools_ok": true,
+      "artifact_ok": true,
+      "expected": [
+        "not|n't|no data|unable"
+      ],
+      "tools_used": [],
+      "latency_s": 0.77,
+      "tokens": 1778,
+      "error": null,
+      "answer": "I\u2019m sorry\u2014I don\u2019t have any weather data in the tables you provided, so I can\u2019t tell you today\u2019s conditions in London. To answer that question you\u2019d need a source that includes current weather observations (e.g., a weather API or a dataset with city\u2011level weather records)."
+    }
+  ]
+}

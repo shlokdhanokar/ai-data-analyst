@@ -4,7 +4,7 @@ Upload one or more CSV files and ask questions in plain English. The analyst **w
 
 Built for the Digital Back Office *AI Engineer Assignment*. The aim was a production-shaped AI application: the LLM is grounded by tools and never asked to make up numbers.
 
-> 🎥 **Demo video:** [`docs/demo.mp4`](docs/demo.mp4)  ·  🌐 **Live app:** _add your Streamlit Cloud URL here_
+> 🎥 **Demo video (29 s):** [`docs/demo.mp4`](docs/demo.mp4)  ·  🌐 **Live app:** _add your Streamlit Cloud URL here_  ·  ✅ **Evals:** 9/9 passed, ~4.5 s avg latency (`openai/gpt-oss-120b` on Groq)
 
 ![Chat](docs/screenshots/chat_1.png)
 
@@ -50,7 +50,7 @@ flowchart LR
     UI <-->|answer + artifacts<br/>streamed tokens| AG
     UI --> DB[dashboard + quality tabs<br/>no LLM needed]
     DB --> DS
-    AG <-->|OpenAI-compatible API| LLM[(LLM<br/>Groq Llama 3.3 70B<br/>or OpenAI / Ollama)]
+    AG <-->|OpenAI-compatible API| LLM[(LLM<br/>Groq gpt-oss-120b<br/>or OpenAI / Ollama)]
     AG -.->|JSON logs| LOG[(logs/app.log)]
     UI --> EX[report export<br/>HTML / Markdown]
 ```
@@ -81,7 +81,7 @@ analyst/
   report.py                HTML / Markdown export
   cache.py                 thread-safe LRU cache
   logging_setup.py         JSON-lines logging, timing context manager
-tests/                     60 offline tests (fake LLM, no network)
+tests/                     62 offline tests (fake LLM, no network)
 evals/run_evals.py         live benchmark with data-derived ground truth
 sample_data/               sales, customers, products (+ generator script)
 scripts/                   sample-data generator, smoke test, screenshot/video capture
@@ -123,13 +123,15 @@ Any OpenAI-compatible endpoint works through `.env`, for example OpenAI (`LLM_BA
 
 ```bash
 pip install -r requirements-dev.txt
-pytest                      # 60 offline tests, ~10 s, no API key needed
+pytest                      # 62 offline tests, ~10 s, no API key needed
 python evals/run_evals.py   # live benchmark against the LLM (needs a key)
 ```
 
 **Unit/integration tests** cover CSV validation edge cases (encodings, delimiters, currency text, empty/oversized files), SQL safety (DDL/DML, multi-statement, filesystem functions), sandbox escapes (imports, dunders, `open`, file I/O), every anomaly detector (including no false positives on clean data), quality scoring, forecasting, every chart type, the agent loop with a scripted fake LLM (tool → answer, memory, self-correction after tool errors, step cap, malformed tool-call retry, LLM error handling, caching) and report export.
 
 **The evaluation framework** asks the assignment's example questions (plus a join, a forecast and an off-topic question). Expected answers are **computed from the data with pandas**, so they stay correct if the data changes. Each answer is scored on correct facts, correct tool use and required artifacts. Pass rate, latency and tokens are written to `evals/results.json`.
+
+Latest run (`openai/gpt-oss-120b` via Groq): **9/9 passed**, ~4.5 s average latency, ~45k tokens for the whole suite. Iterating against this benchmark drove several fixes: a deterministic chart fallback when the model only runs a query, pre-computed anomaly impact figures so the model never estimates them, row ids in anomaly context, and retrying malformed tool calls.
 
 ---
 
@@ -142,7 +144,7 @@ Anomalies are computed **deterministically**, not by the LLM, so they are reprod
 | Outlier | Modified z-score (median/MAD) on a log scale for skewed data, cut at the largest **natural break** in the tail so that a long tail of legitimate large orders isn't flagged | *quantity=150 vs median 3 (50x the typical value): 8.5 robust std-devs away* |
 | Contextual | A value that breaks an otherwise-fixed relationship inside a group | *unit_price=12.99 for product='Mechanical Keyboard', but 99.8% of its rows have 89.00* |
 | Rule | Negative values in an otherwise non-negative column; exact duplicate rows | *quantity=-5 is negative while 99.95% of values are non-negative* |
-| Time series | Daily record count and daily total vs a rolling median | *Number of records on 2025-07-15 was 67 vs a typical 7 (spike)* |
+| Time series / volume | Daily total and daily record count vs a rolling median | *Number of records on 2025-07-15 was 67 vs a typical 7 (spike)* |
 | Multivariate (opt-in) | IsolationForest, explained by the most deviant features | *Unusual combination: revenue=…, quantity=…* |
 
 The sample data contains **deliberately injected anomalies**, and the test suite checks that all of them are found: 3 bulk orders, 2 negative quantities, a mis-keyed unit price, a flash-sale spike on 2025-07-15, 3 duplicate rows and 25 missing `channel` values.
@@ -176,7 +178,7 @@ Regenerate with `python scripts/generate_sample_data.py` (deterministic seed).
 - **Tools over free-form generation.** The LLM never computes numbers itself. It writes SQL/pandas, which run on the real data, and its answer must be grounded in those results. This is the main defence against hallucinated figures.
 - **DuckDB for SQL.** Fast in-process analytical SQL directly over pandas DataFrames, with no database server. Only single `SELECT` statements are allowed: they are validated with DuckDB's own parser, and `enable_external_access=false` is set so SQL can't touch the filesystem or network.
 - **Sandboxed pandas.** Code is AST-checked (no imports, dunders, `open`/`eval`/`getattr` or file I/O methods) and runs with whitelisted builtins on *copies* of the data.
-- **Provider-agnostic LLM layer.** It uses the OpenAI Chat Completions protocol, so Groq, OpenAI, Ollama and vLLM are a config change away. Groq's Llama 3.3 70B is the default because it's fast with a free tier. Provider errors (auth, rate limit, timeout, malformed tool calls) map to clear user-facing messages, and malformed tool calls are retried automatically.
+- **Provider-agnostic LLM layer.** It uses the OpenAI Chat Completions protocol, so Groq, OpenAI, Ollama and vLLM are a config change away. Groq's `openai/gpt-oss-120b` is the default because it's fast with a free tier. Provider errors (auth, rate limit, timeout, malformed tool calls) map to clear user-facing messages, and malformed tool calls are retried automatically.
 - **Compact memory.** Raw tool payloads aren't replayed. Instead each past answer is stored with the SQL/code that produced it, which keeps prompts small but still supports follow-ups like *"Generate SQL for this analysis"* or *"now only for 2025"*.
 - **Caching** is keyed on a hash of the loaded data plus recent context, so it can never serve an answer computed on different data.
 - **Assumptions:** CSVs have a header row; each file fits in memory (default limit 50 MB per file, 10 files); "revenue/sales" means the money column (or quantity × price if none exists); sessions are single-user and in-memory.

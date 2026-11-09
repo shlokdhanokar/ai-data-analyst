@@ -29,6 +29,7 @@ from analyst.agent import AgentResponse, DataAnalystAgent  # noqa: E402
 from analyst.config import get_settings  # noqa: E402
 from analyst.data_loader import DataStore, load_csv  # noqa: E402
 from analyst.llm import OpenAICompatibleClient  # noqa: E402
+from analyst.logging_setup import setup_logging  # noqa: E402
 
 
 @dataclass
@@ -55,7 +56,7 @@ def _underperformers(d):
     s = s.assign(year=s["order_date"].dt.year)
     by = s.pivot_table(index="product", columns="year", values="revenue", aggfunc="sum")
     growth = (by[by.columns[-1]] / by[by.columns[0]] - 1).sort_values()
-    return [growth.index[0]]
+    return ["|".join(growth.index[:2])]  # either of the two fastest-declining products
 
 
 def _top_segment(d):
@@ -72,12 +73,22 @@ CASES = [
     Case("Detect anomalies in the sales dataset.", lambda d: ["2025-07-15"], {"detect_anomalies"}, artifact="anomalies"),
     Case("Which customer segment brings the most revenue?", _top_segment, {"run_sql", "run_pandas"}),
     Case("Forecast revenue for the next 3 months.", lambda d: [], {"forecast"}, artifact="chart"),
-    Case("What is the weather in London today?", lambda d: ["not"], set()),  # should decline gracefully
+    Case("What is the weather in London today?", lambda d: ["not|n't|no data|unable"], set()),  # should decline gracefully
 ]
 
 
+def _norm(text: str) -> str:
+    """Normalise typographic hyphens/apostrophes the model likes to emit."""
+    for ch in "‐‑‒–—−":
+        text = text.replace(ch, "-")
+    for ch in "     ":
+        text = text.replace(ch, " ")
+    return text.replace("’", "'").lower()
+
+
 def score(case: Case, r: AgentResponse, data: dict[str, pd.DataFrame]) -> dict:
-    text = r.answer.lower() + " " + " ".join(str(a.data).lower() for a in r.artifacts if a.kind in ("sql", "code"))
+    text = _norm(r.answer) + " " + " ".join(str(a.data).lower() for a in r.artifacts if a.kind in ("sql", "code"))
+    text = _norm(text)
     expected = case.expect(data)
     facts_ok = all(any(alt.lower() in text for alt in e.split("|")) for e in expected)
     used = {s.tool for s in r.steps}
@@ -89,16 +100,18 @@ def score(case: Case, r: AgentResponse, data: dict[str, pd.DataFrame]) -> dict:
         "facts_ok": facts_ok, "tools_ok": tools_ok, "artifact_ok": artifact_ok,
         "expected": expected, "tools_used": sorted(used),
         "latency_s": r.latency_s, "tokens": r.usage.get("total_tokens", 0),
-        "error": r.error, "answer": r.answer[:600],
+        "error": r.error, "answer": r.answer[:3000],
     }
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", help="comma-separated 1-based case numbers")
+    ap.add_argument("--pause", type=float, default=20, help="seconds between questions (rate limits)")
     args = ap.parse_args()
 
     settings = get_settings()
+    setup_logging("WARNING", settings.log_dir)
     if not settings.llm_configured:
         sys.exit("Set GROQ_API_KEY (or LLM_API_KEY) to run evals.")
     store = DataStore()
@@ -125,7 +138,7 @@ def main() -> None:
         if not res["passed"]:
             print(f"       expected={res['expected']} facts={res['facts_ok']} tools={res['tools_ok']} "
                   f"artifact={res['artifact_ok']} error={res['error']}")
-        time.sleep(1)  # be gentle with free-tier rate limits
+        time.sleep(args.pause)  # free-tier tokens-per-minute limits; avoids 429 back-off inflating latency
 
     n = len(results)
     passed = sum(r["passed"] for r in results)

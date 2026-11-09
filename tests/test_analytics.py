@@ -94,13 +94,14 @@ def test_detects_timeseries_spike():
     spike["date"] = pd.Timestamp("2024-06-01")
     df = pd.concat([df, spike], ignore_index=True)
     report = detect_anomalies(df, "t")
-    assert any(a.method == "timeseries" and a.period == "2024-06-01" for a in report.anomalies)
+    assert any(a.method in ("timeseries", "volume") and a.period == "2024-06-01" for a in report.anomalies)
 
 
 def test_sample_data_injected_anomalies_found(sample_store):
     report = detect_anomalies(sample_store.get("sales"), "sales")
     methods = {a.method for a in report.anomalies}
-    assert {"outlier", "rule", "duplicate", "contextual", "timeseries"} <= methods
+    assert {"outlier", "rule", "duplicate", "contextual", "timeseries", "volume"} <= methods
+    assert any(a.method == "volume" and a.period == "2025-07-15" for a in report.anomalies)
     assert len([a for a in report.anomalies if a.method == "outlier"]) <= 10  # precise, not noisy
 
 

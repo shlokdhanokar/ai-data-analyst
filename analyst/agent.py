@@ -10,11 +10,15 @@ Flow per question:
 
 from __future__ import annotations
 
+import re
 import time
 from dataclasses import dataclass, field
 from typing import Any
 
+import pandas as pd
+
 from .cache import LRUCache, make_key
+from .charts import build_chart
 from .config import Settings
 from .data_loader import DataStore
 from .llm import LLMClient, LLMError, TokenCallback, ToolFormatError, parse_args
@@ -30,19 +34,26 @@ loaded as DuckDB/pandas tables. Today is {today}.
 {schema}
 
 ## Rules
-- Ground every number in a tool result. Never guess or invent values, columns or tables.
+- Ground every number in a tool result. Never guess, estimate or invent values, columns or tables. If you want \
+a figure (a sum, share or impact) that no tool returned, compute it with another tool call or leave it out.
 - Use `run_sql` for aggregations, rankings, filters and joins (DuckDB SQL; use date_trunc('month', col) for months, \
 strftime for formatting). Use `run_pandas` only when SQL is awkward.
 - When the user asks to see, show, plot, visualise, compare or trend something, call `create_chart` (line for time \
 trends, bar for category comparisons, pie for shares of a whole, scatter for relationships).
 - For anomaly / outlier / unusual-value questions call `detect_anomalies`; for data-quality questions call \
-`data_quality_report`; for forecasts / predictions call `forecast`.
+`data_quality_report`; for forecasts / predictions call `forecast`. When reporting anomalies, cover every \
+anomaly type the tool returned (outlier, contextual, rule, duplicate, timeseries, volume) with its key example and date.
 - "Revenue" or "sales" means the money column (e.g. revenue/sales/amount); if none exists compute quantity * price.
+- For "which is highest / top / best" questions, query ALL groups (or at least the top several, without LIMIT 1) \
+so you can state the margin over the runner-up and each group's share of the total. Only claim comparisons you \
+actually computed.
 - "Underperforming" means low or declining results relative to peers: compare totals AND trend (e.g. recent \
 period vs earlier period) before concluding.
 - If a tool returns ERROR, fix the call (check column names in the schema) and retry; don't give up after one error.
 - When asked for SQL or code, return it in a fenced code block. If the user says "this analysis", reuse the \
 analysis from the previous turn.
+- Never claim the data is clean or free of anomalies unless a tool in this conversation actually checked it; \
+mention known caveats instead (e.g. "large one-off orders may inflate totals; ask me to detect anomalies").
 - If the question cannot be answered from the data, say so plainly and suggest what data would be needed.
 
 ## Answer format (markdown, concise, no preamble)
@@ -162,6 +173,7 @@ class DataAnalystAgent:
             _add_usage(usage, resp.usage)
 
             if not resp.tool_calls:
+                _ensure_chart(question, artifacts, steps)
                 return AgentResponse(question, resp.content.strip() or "(no answer)", artifacts, steps, usage)
 
             messages.append(resp.assistant_message())
@@ -178,7 +190,36 @@ class DataAnalystAgent:
         messages.append({"role": "user", "content": FALLBACK_NOTE})
         resp = self.llm.complete(messages, tools=None, on_token=on_token)
         _add_usage(usage, resp.usage)
+        _ensure_chart(question, artifacts, steps)
         return AgentResponse(question, resp.content.strip(), artifacts, steps, usage)
+
+
+CHART_INTENT = re.compile(r"\b(show|plot|chart|graph|visuali[sz]e|trend|trends|over time|distribution|compare)\b", re.I)
+
+
+def _ensure_chart(question: str, artifacts: list[Artifact], steps: list[Step]) -> None:
+    """Deterministic fallback: if the user asked to *see* something but the model only ran a query,
+    chart the last result table (line for time series, bar otherwise)."""
+    if not CHART_INTENT.search(question) or any(a.kind == "chart" for a in artifacts):
+        return
+    tables = [a for a in artifacts if a.kind == "table" and isinstance(a.data, pd.DataFrame)]
+    if not tables:
+        return
+    df = tables[-1].data
+    if len(df) < 2 or df.shape[1] < 2:
+        return
+    x = df.columns[0]
+    numeric = [c for c in df.columns[1:] if pd.api.types.is_numeric_dtype(df[c])]
+    if not numeric:
+        return
+    kind = "line" if pd.api.types.is_datetime64_any_dtype(df[x]) else "bar"
+    try:
+        fig = build_chart(df, kind, x=x, y=numeric[0], title=tables[-1].title)
+    except ValueError:
+        return
+    artifacts.insert(0, Artifact("chart", tables[-1].title, fig))
+    steps.append(Step("auto_chart", {"chart_type": kind, "x": x, "y": numeric[0]}, True, 0.0,
+                      "Chart generated automatically from the last query result."))
 
 
 def _add_usage(total: dict[str, int], new: dict[str, int]) -> None:

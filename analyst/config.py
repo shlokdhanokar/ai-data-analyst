@@ -48,7 +48,7 @@ def get_settings() -> Settings:
     return Settings(
         api_key=_env("LLM_API_KEY", _env("GROQ_API_KEY", "")),
         base_url=_env("LLM_BASE_URL", "https://api.groq.com/openai/v1"),
-        model=_env("LLM_MODEL", "llama-3.3-70b-versatile"),
+        model=_env("LLM_MODEL", "openai/gpt-oss-120b"),
         temperature=float(_env("LLM_TEMPERATURE", "0.1")),
         request_timeout=float(_env("LLM_TIMEOUT_SECONDS", "60")),
         max_tool_steps=int(_env("MAX_TOOL_STEPS", "6")),

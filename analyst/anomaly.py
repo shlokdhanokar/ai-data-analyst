@@ -4,7 +4,8 @@ Three complementary detectors, each producing a human-readable reason:
 
 1. Robust univariate outliers: modified z-score (median / MAD) confirmed by Tukey IQR fences.
 2. Rule violations: negative values in a column that is otherwise non-negative, duplicate rows.
-3. Time-series spikes/drops: per-period totals compared with a rolling median.
+3. Time-series spikes/drops: per-period totals ("timeseries") and record counts ("volume")
+   compared with a rolling median.
 4. Multivariate outliers (optional): IsolationForest on numeric columns, explained by the
    features that deviate most from their median.
 """
@@ -52,9 +53,15 @@ class AnomalyReport:
             f"{len(self.anomalies)} anomalies in '{self.table}' "
             f"(by method: {counts}; columns checked: {', '.join(self.columns_checked)})."
         ]
-        for a in sorted(self.anomalies, key=lambda x: -x.score)[:limit]:
-            loc = f"row {a.row_index}" if a.row_index is not None else f"period {a.period}"
-            lines.append(f"- [{a.method}] {loc}: {a.reason}")
+        # Show the strongest few from EACH detector so no anomaly type is crowded out.
+        per_method = max(2, limit // max(1, len(counts)))
+        for method in counts:
+            group = sorted((a for a in self.anomalies if a.method == method), key=lambda x: -x.score)
+            for a in group[:per_method]:
+                loc = f"row {a.row_index}" if a.row_index is not None else f"period {a.period}"
+                lines.append(f"- [{a.method}] {loc}: {a.reason}")
+            if len(group) > per_method:
+                lines.append(f"  (+{len(group) - per_method} more {method} anomalies)")
         lines.extend(self.notes)
         return "\n".join(lines)
 
@@ -215,7 +222,7 @@ def timeseries_anomalies(df: pd.DataFrame, date_col: str, value_col: str, freq: 
             zval = float(z[ts])
             kind = "spike" if zval > 0 else "drop"
             out.append(Anomaly(
-                method="timeseries",
+                method="volume" if label == "number of records" else "timeseries",
                 period=str(ts.date()),
                 column=value_col,
                 value=float(series[ts]),

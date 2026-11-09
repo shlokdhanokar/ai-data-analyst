@@ -82,7 +82,8 @@ class OpenAICompatibleClient:
                 response = self._consume(stream, on_token)
             except openai.BadRequestError as exc:
                 body = str(exc)
-                if "tool_use_failed" in body or "failed_generation" in body or "tool call validation" in body:
+                markers = ("tool_use_failed", "failed_generation", "tool call validation", "parse tool call")
+                if any(m in body for m in markers):
                     raise ToolFormatError(body[:500]) from exc
                 raise LLMError(f"Request rejected by the LLM provider: {body[:300]}") from exc
             except openai.AuthenticationError as exc:

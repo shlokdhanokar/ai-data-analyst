@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+logs/
+docs/video_raw/
+evals/results_*.json
+.DS_Store

@@ -1,0 +1,81 @@
+customer_id,customer_name,segment,country,signup_date
+C001,Apex Digital,SMB,Singapore,2022-06-17
+C002,Apex Partners,Consumer,UAE,2023-11-17
+C003,Apex Retail,Consumer,Singapore,2022-08-13
+C004,Apex Systems,Consumer,India,2023-07-16
+C005,Apex Traders,Consumer,Singapore,2023-02-10
+C006,Blue Digital,Consumer,India,2023-06-30
+C007,Blue Industries,SMB,United States,2023-03-16
+C008,Blue Labs,SMB,Germany,2023-03-26
+C009,Blue Partners,Consumer,United States,2023-03-08
+C010,Blue Solutions,SMB,India,2023-06-30
+C011,Blue Systems,SMB,United Kingdom,2023-06-02
+C012,Blue Traders,Enterprise,UAE,2022-04-05
+C013,Core Digital,Consumer,United Kingdom,2023-08-02
+C014,Core Industries,SMB,United Kingdom,2023-01-11
+C015,Core Labs,Consumer,Singapore,2022-08-15
+C016,Core Partners,Enterprise,India,2022-12-26
+C017,Core Retail,Enterprise,Singapore,2023-11-08
+C018,Core Solutions,Consumer,Singapore,2023-08-24
+C019,Core Systems,Enterprise,Germany,2023-08-07
+C020,Core Traders,Enterprise,India,2022-11-20
+C021,Lumen Digital,SMB,India,2023-07-03
+C022,Lumen Labs,Consumer,United Kingdom,2022-09-27
+C023,Lumen Solutions,Enterprise,Germany,2023-04-26
+C024,Lumen Systems,SMB,India,2023-03-24
+C025,Lumen Traders,Consumer,United States,2022-06-24
+C026,Nova Industries,Consumer,India,2022-07-06
+C027,Nova Labs,SMB,Germany,2022-02-12
+C028,Nova Partners,Enterprise,India,2022-04-08
+C029,Nova Retail,Enterprise,UAE,2022-10-31
+C030,Nova Solutions,Enterprise,India,2022-12-01
+C031,Nova Systems,Enterprise,United Kingdom,2022-04-26
+C032,Nova Traders,SMB,United Kingdom,2022-10-19
+C033,Orbit Industries,Enterprise,UAE,2023-02-27
+C034,Orbit Labs,SMB,India,2022-06-12
+C035,Orbit Partners,SMB,United States,2022-08-25
+C036,Orbit Retail,SMB,Germany,2022-09-15
+C037,Orbit Solutions,Enterprise,Germany,2022-12-20
+C038,Orbit Systems,Consumer,UAE,2022-09-14
+C039,Orbit Traders,Consumer,UAE,2023-05-31
+C040,Peak Digital,Consumer,United States,2022-08-18
+C041,Peak Industries,Enterprise,UAE,2022-10-31
+C042,Peak Labs,Enterprise,United Kingdom,2022-09-23
+C043,Peak Retail,Consumer,Singapore,2022-05-09
+C044,Peak Systems,SMB,Germany,2023-04-26
+C045,Peak Traders,SMB,UAE,2022-06-14
+C046,Prime Digital,SMB,Singapore,2022-07-27
+C047,Prime Industries,SMB,UAE,2023-07-09
+C048,Prime Partners,Consumer,Singapore,2023-10-27
+C049,Prime Retail,SMB,Germany,2023-04-15
+C050,Prime Solutions,Consumer,India,2023-10-04
+C051,Prime Systems,Enterprise,United States,2023-08-21
+C052,Prime Traders,SMB,United Kingdom,2022-12-03
+C053,Swift Digital,SMB,Singapore,2023-06-24
+C054,Swift Industries,Enterprise,United Kingdom,2022-08-18
+C055,Swift Labs,Enterprise,United Kingdom,2022-11-19
+C056,Swift Partners,SMB,United Kingdom,2023-01-10
+C057,Swift Retail,Consumer,Germany,2023-11-04
+C058,Swift Solutions,SMB,Germany,2023-08-17
+C059,Swift Systems,Consumer,Singapore,2022-12-09
+C060,Swift Traders,Consumer,United States,2023-04-02
+C061,Urban Digital,SMB,United Kingdom,2022-05-22
+C062,Urban Industries,Consumer,India,2023-07-18
+C063,Urban Labs,Enterprise,India,2023-01-23
+C064,Urban Partners,Enterprise,United States,2023-01-08
+C065,Urban Retail,Consumer,Singapore,2023-06-21
+C066,Urban Systems,Consumer,Germany,2023-03-20
+C067,Urban Traders,Enterprise,Singapore,2022-02-20
+C068,Vertex Digital,SMB,India,2022-07-21
+C069,Vertex Industries,SMB,India,2022-05-04
+C070,Vertex Labs,Consumer,Singapore,2023-05-30
+C071,Vertex Partners,SMB,India,2022-01-25
+C072,Vertex Retail,SMB,India,2022-05-22
+C073,Vertex Solutions,SMB,United States,2023-02-23
+C074,Vertex Systems,SMB,Singapore,2023-05-02
+C075,Vertex Traders,SMB,UAE,2022-12-19
+C076,Zen Digital,Consumer,India,2023-08-26
+C077,Zen Labs,SMB,Singapore,2023-10-06
+C078,Zen Partners,Enterprise,Singapore,2022-04-03
+C079,Zen Systems,Enterprise,UAE,2023-10-29
+C080,Zen Traders,Consumer,Singapore,2023-03-07
